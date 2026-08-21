@@ -15,6 +15,20 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @can('create', App\Models\WorkOrder::class)
+                    <x-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">
+                        {{ __('Work Orders') }}
+                    </x-nav-link>
+                    @endcan
+
+                    <x-nav-link :href="route('productions.index')" :active="request()->routeIs('productions.*')">
+                        {{ __('Productions') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('quality-controls.index')" :active="request()->routeIs('quality-controls.*')">
+                        {{ __('Quality Control') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -69,6 +83,17 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            @can('create', App\Models\WorkOrder::class)
+            <x-responsive-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">
+                {{ __('Work Orders') }}
+            </x-responsive-nav-link>
+            @endcan
+            <x-responsive-nav-link :href="route('productions.index')" :active="request()->routeIs('productions.*')">
+                {{ __('Productions') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('quality-controls.index')" :active="request()->routeIs('quality-controls.*')">
+                {{ __('Quality Control') }}
             </x-responsive-nav-link>
         </div>
 

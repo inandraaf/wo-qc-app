@@ -32,7 +32,31 @@ class QualityControlController extends Controller
 
     public function store(StoreQualityControlRequest $request): RedirectResponse
     {
-        QualityControl::create($request->validated());
+        $data = $request->validated();
+
+        $workOrder = WorkOrder::withSum('productions', 'qty_production')
+                              ->withSum('qualityControls as qc_total_good', 'qty_good')
+                              ->withSum('qualityControls as qc_total_not_good', 'qty_not_good')
+                              ->find($data['work_order_id']);
+
+        $totalProduksi = $workOrder->productions_sum_qty_production ?? 0;
+        $totalQc = ($workOrder->qc_total_good ?? 0) + ($workOrder->qc_total_not_good ?? 0);
+        $sisaQc = $totalProduksi - $totalQc;
+        $inputTotal = (int) $data['qty_good'] + (int) $data['qty_not_good'];
+
+        if ($sisaQc <= 0) {
+            return redirect()->back()
+                             ->withErrors(['qty_good' => 'Tidak ada produksi yang bisa di-QC. Sisa QC: 0.'])
+                             ->withInput();
+        }
+
+        if ($inputTotal > $sisaQc) {
+            return redirect()->back()
+                             ->withErrors(['qty_good' => "Melebihi total produksi. Sisa yang boleh di-QC: {$sisaQc}"])
+                             ->withInput();
+        }
+
+        QualityControl::create($data);
 
         return redirect()->back()
                          ->with('success', 'Data QC berhasil dicatat.');

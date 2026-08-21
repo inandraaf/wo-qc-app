@@ -30,7 +30,20 @@ class ProductionController extends Controller
 
     public function store(StoreProductionRequest $request): RedirectResponse
     {
-        Production::create($request->validated());
+        $data = $request->validated();
+
+        $workOrder = WorkOrder::withSum('productions', 'qty_production')
+                              ->find($data['work_order_id']);
+
+        $sisa = $workOrder->qty_order - ($workOrder->productions_sum_qty_production ?? 0);
+
+        if ((int) $data['qty_production'] > $sisa) {
+            return redirect()->back()
+                             ->withErrors(['qty_production' => "Melebihi target. Sisa yang boleh diinput: {$sisa}"])
+                             ->withInput();
+        }
+
+        Production::create($data);
 
         return redirect()->back()
                          ->with('success', 'Data produksi berhasil dicatat.');

@@ -1,52 +1,77 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
+    <form method="POST" action="{{ route('register') }}" style="display: flex; flex-direction: column; gap: 1.25rem;">
         @csrf
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        <div style="text-align: center; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 1.1rem; font-weight: 700; color: #f1f5f9;">Create Account</h2>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Daftar user baru ke sistem</p>
         </div>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <!-- Name -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="name" style="color: #94a3b8;">Nama Lengkap</label>
+            <input type="text" id="name" name="name" value="{{ old('name') }}"
+                   class="form-control" style="background:#0f172a; border-color:#334155; color:#f1f5f9;"
+                   placeholder="Nama Anda" required autofocus autocomplete="name">
+            @error('name')
+                <div class="form-error" style="color:#f87171;">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <!-- Email -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="email" style="color: #94a3b8;">Email</label>
+            <input type="email" id="email" name="email" value="{{ old('email') }}"
+                   class="form-control" style="background:#0f172a; border-color:#334155; color:#f1f5f9;"
+                   placeholder="user@example.com" required autocomplete="username">
+            @error('email')
+                <div class="form-error" style="color:#f87171;">{{ $message }}</div>
+            @enderror
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="password" style="color: #94a3b8;">Password</label>
+            <input type="password" id="password" name="password"
+                   class="form-control" style="background:#0f172a; border-color:#334155; color:#f1f5f9;"
+                   placeholder="Min. 8 karakter" required autocomplete="new-password">
+            @error('password')
+                <div class="form-error" style="color:#f87171;">{{ $message }}</div>
+            @enderror
         </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="password_confirmation" style="color: #94a3b8;">Konfirmasi Password</label>
+            <input type="password" id="password_confirmation" name="password_confirmation"
+                   class="form-control" style="background:#0f172a; border-color:#334155; color:#f1f5f9;"
+                   placeholder="Ulangi password" required autocomplete="new-password">
+            @error('password_confirmation')
+                <div class="form-error" style="color:#f87171;">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
+        <button type="submit" style="
+            width: 100%;
+            padding: 0.625rem 1rem;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(37,99,235,0.4)'"
+           onmouseout="this.style.transform=''; this.style.boxShadow=''">
+            Daftar Akun
+        </button>
 
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
+        <div style="text-align: center;">
+            <a href="{{ route('login') }}" style="font-size: 0.8rem; color: #64748b; text-decoration: none;">
+                Sudah punya akun? <span style="color:#3b82f6;">Sign in</span>
+            </a>
         </div>
     </form>
 </x-guest-layout>
