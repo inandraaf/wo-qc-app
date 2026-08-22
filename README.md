@@ -4,7 +4,7 @@ Sistem manajemen Work Order dan Quality Control untuk lini produksi manufacturin
 
 ## Tech Stack
 
-- Laravel 11/12 + PHP 8.2
+- Laravel 12 + PHP 8.2
 - MySQL (InnoDB)
 - Tailwind CSS + Laravel Breeze
 
