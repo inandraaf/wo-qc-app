@@ -1,66 +1,139 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WO & QC System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem manajemen Work Order dan Quality Control untuk lini produksi manufacturing.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Laravel 11/12 + PHP 8.2
+- MySQL (InnoDB)
+- Tailwind CSS + Laravel Breeze
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fitur
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Fitur | Deskripsi |
+|-------|-----------|
+| Work Order | CRUDWO — nomor (unique), tanggal, produk, qty_order |
+| Input Produksi | Catat output per WO — over-production guard aktif |
+| Input QC | Catat Good / Not Good per WO — over-QC guard aktif |
+| Dasbor Monitoring | 6 metric real-time per WO + search + status filter |
+| WO Status Badge | Otomatis — Belum Produksi / In Progress / Prod. Selesai / Fully QC'd |
+| Role-based Access | PPIC, Operator, QC, Manager |
+| Dark Sidebar UI | Industrial command center design |
 
-## Learning Laravel
+## Struktur Database
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```
+work_orders ──(1:N)── productions
+     │
+     └───(1:N)── quality_controls
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Tabel | Kolom Kunci |
+|-------|-------------|
+| `work_orders` | `id`, `wo_number` (UNIQUE), `date`, `product`, `qty_order` |
+| `productions` | `id`, `work_order_id` (FK → work_orders, ON DELETE CASCADE), `qty_production`, `production_date` |
+| `quality_controls` | `id`, `work_order_id` (FK → work_orders, ON DELETE CASCADE), `qty_good`, `qty_not_good`, `qc_date` |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Validasi Inti
 
-## Laravel Sponsors
+- **Over-production**: `(SUM produksi + input) <= qty_order` — ditolak kalau melebihi sisa
+- **Over-QC**: `(SUM QC + input) <= SUM produksi` — ditolak kalau melebihi sisa QC
+- **WO number**: UNIQUE constraint di database
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Monitoring Metric (per WO)
 
-### Premium Partners
+```
+Qty Order         = qty_order (dari work_orders)
+Total Produksi    = SUM(qty_production)
+Total Good        = SUM(qty_good)
+Total Not Good    = SUM(qty_not_good)
+Sisa Belum Prod   = qty_order - SUM(qty_production)
+Sisa Belum QC     = SUM(qty_production) - SUM(qty_good + qty_not_good)
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Semua dihitung on-the-fly via Eloquent `withSum()` — tidak ada kolom turunan di database.
 
-## Contributing
+## WO Status Badge
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Kondisi | Label | Warna |
+|---------|-------|-------|
+| Belum ada produksi | `Belum Produksi` | Gray |
+| Produksi sedang berjalan | `In Progress` | Orange |
+| Produksi selesai, QC belum semua | `Prod. Selesai` | Blue |
+| Semua QC selesai | `Fully QC'd` | Green |
 
-## Code of Conduct
+Status di-determine di Blade secara otomatis berdasarkan `sisaProduksi` dan `sisaQc`. Tidak perlu input manual.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Role & Akses
 
-## Security Vulnerabilities
+| Role | Buat WO | Edit WO | Input Produksi | Input QC | Dashboard |
+|------|:-------:|:-------:|:--------------:|:--------:|:---------:|
+| PPIC | ✅ | ✅ | | | |
+| Operator | | | ✅ | | |
+| QC | | | | ✅ | |
+| Manager | | | | | ✅ |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Instalasi
 
-## License
+```bash
+# 1. Clone & install
+composer install
+cp .env.example .env
+php artisan key:generate
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# 2. Buat database MySQL
+mysql -u root -p -e "CREATE DATABASE wo_qc"
+
+# 3. Migration + seeder
+php artisan migrate
+php artisan db:seed
+
+# 4. Frontend
+npm install
+npm run dev   # development
+# atau
+npm run build  # production
+
+# 5. Jalankan
+php artisan serve
+```
+
+Akses di `http://localhost:8000`
+
+## User Test
+
+| Email | Password | Role |
+|-------|----------|------|
+| `ppic@example.com` | `password` | ppic |
+| `operator@example.com` | `password` | operator |
+| `qc@example.com` | `password` | qc |
+| `manager@example.com` | `password` | manager |
+
+## Route
+
+```
+GET   /dashboard           Dasbor monitoring (search & filter via query string)
+GET   /dashboard?search=   Filter by wo_number or product
+GET   /dashboard?status=   Filter by: in_progress | prod_complete | fully_qc
+GET   /work-orders        Daftar WO
+GET   /work-orders/create Form buat WO
+POST  /work-orders        Simpan WO baru
+GET   /work-orders/{id}   Detail WO
+GET   /work-orders/{id}/edit  Form edit WO
+PUT   /work-orders/{id}  Update WO
+DELETE /work-orders/{id}  Hapus WO
+GET   /productions         Input & log produksi
+POST  /productions         Simpan produksi
+GET   /quality-controls    Input & log QC
+POST  /quality-controls    Simpan QC
+```
+
+## Desain Sistem
+
+**Single Source of Truth** — semua metric dihitung dari tabel sumber (`work_orders`, `productions`, `quality_controls`) via Eloquent `withSum()`. Tidak ada kolom turunan yang disimpan, sehingga tidak mungkin terjadi drift antara state terhitung dan data aktual.
+
+**Over-limit Guard di Controller Layer** — validasi over-production dan over-QC diletakkan di Controller (`ProductionController::store`, `QualityControlController::store`) menggunakan query `withSum()` sebelum insert. Ini lebih reliable daripada FormRequest closure yang tidak konsisten di CLI context.
+
+**Foreign Key ON DELETE CASCADE** — saat Work Order dihapus, semua record produksi dan QC terkait ikut terhapus otomatis. Ini menjamin konsistensi data tanpa perlu cleanup manual.
+
+**Database Engine InnoDB** — semua tabel menggunakan InnoDB agar foreign key constraint berjalan penuh dan transaction support tersedia.

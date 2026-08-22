@@ -7,6 +7,12 @@
             <h1>Dasbor Monitoring</h1>
             <p>Pantau progres seluruh Work Order secara real-time</p>
         </div>
+        @can('create', App\Models\WorkOrder::class)
+            <a href="{{ route('work-orders.create') }}" class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Buat WO
+            </a>
+        @endcan
     </div>
 
     @if (session('success'))
@@ -16,13 +22,49 @@
         </div>
     @endif
 
+    <!-- Search + Filter Bar -->
+    <div class="card mb-4" style="padding:1rem 1.25rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+        <form method="GET" action="{{ route('dashboard') }}" style="display:flex; align-items:center; gap:0.5rem; flex:1;">
+            <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari WO Number atau Product...">
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Cari</button>
+            @if($search || $status)
+                <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">Reset</a>
+            @endif
+        </form>
+
+        {{-- Status Filter Tabs --}}
+        <div style="display:flex; gap:0.375rem; flex-wrap:wrap;">
+            <a href="{{ route('dashboard', ['search' => $search ?? null]) }}"
+               class="btn btn-sm {{ !$status ? 'btn-primary' : 'btn-secondary' }}" style="font-size:0.75rem;">
+                Semua
+            </a>
+            <a href="{{ route('dashboard', ['search' => $search ?? null, 'status' => 'in_progress']) }}"
+               class="btn btn-sm {{ $status === 'in_progress' ? 'btn-primary' : 'btn-secondary' }}" style="font-size:0.75rem;">
+                In Progress
+            </a>
+            <a href="{{ route('dashboard', ['search' => $search ?? null, 'status' => 'prod_complete']) }}"
+               class="btn btn-sm {{ $status === 'prod_complete' ? 'btn-primary' : 'btn-secondary' }}" style="font-size:0.75rem;">
+                Prod. Selesai
+            </a>
+            <a href="{{ route('dashboard', ['search' => $search ?? null, 'status' => 'fully_qc']) }}"
+               class="btn btn-sm {{ $status === 'fully_qc' ? 'btn-primary' : 'btn-secondary' }}" style="font-size:0.75rem;">
+                Fully QC'd
+            </a>
+        </div>
+    </div>
+
     <!-- Stat Summary Row -->
     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
         @php
             $totalWo = $workOrders->total();
             $totalOrder = $workOrders->sum('qty_order');
             $totalProd = $workOrders->sum('productions_sum_qty_production');
-            $totalQc = $workOrders->sum('qc_total_good') + $workOrders->sum('qc_total_not_good');
+            $totalQcGood = $workOrders->sum('qc_total_good');
+            $totalQcNotGood = $workOrders->sum('qc_total_not_good');
+            $totalQc = $totalQcGood + $totalQcNotGood;
         @endphp
 
         <div class="stat-card">
@@ -61,12 +103,7 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title">Daftar Work Orders</span>
-            @can('create', App\Models\WorkOrder::class)
-                <a href="{{ route('work-orders.create') }}" class="btn btn-primary btn-sm">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Buat WO
-                </a>
-            @endcan
+            <span style="font-size:0.75rem; color:#94a3b8;">{{ $workOrders->total() }} data</span>
         </div>
         <div class="table-wrapper">
             <table class="data-table">
@@ -80,6 +117,7 @@
                         <th style="width:140px;">Progress</th>
                         <th class="text-right">QC Good</th>
                         <th class="text-right">QC Reject</th>
+                        <th class="text-center">Status</th>
                         <th class="text-center">Action</th>
                     </tr>
                 </thead>
@@ -93,6 +131,26 @@
                             $sisaProduksi = $wo->qty_order - $totalProduction;
                             $sisaQc = $totalProduction - $totalQc;
                             $progress = $wo->qty_order > 0 ? min(100, round($totalProduction / $wo->qty_order * 100)) : 0;
+                            $qcRate = $totalProduction > 0 ? round($totalQcGood / $totalProduction * 100) : 0;
+
+                            // Status determination
+                            if ($totalProduction == 0) {
+                                $statusLabel = 'Belum Produksi';
+                                $statusClass = 'badge-gray';
+                                $statusDot = '#94a3b8';
+                            } elseif ($sisaProduksi > 0) {
+                                $statusLabel = 'In Progress';
+                                $statusClass = 'badge-warning';
+                                $statusDot = '#f59e0b';
+                            } elseif ($sisaQc > 0) {
+                                $statusLabel = 'Prod. Selesai';
+                                $statusClass = 'badge-info';
+                                $statusDot = '#3b82f6';
+                            } else {
+                                $statusLabel = 'Fully QC\'d';
+                                $statusClass = 'badge-success';
+                                $statusDot = '#22c55e';
+                            }
                         @endphp
                         <tr>
                             <td>
@@ -129,6 +187,12 @@
                                 <span class="num" style="color:#dc2626; font-weight:700;">{{ number_format($totalQcNotGood) }}</span>
                             </td>
                             <td class="text-center">
+                                <span class="badge {{ $statusClass }}">
+                                    <span class="badge-dot" style="background:{{ $statusDot }};"></span>
+                                    {{ $statusLabel }}
+                                </span>
+                            </td>
+                            <td class="text-center">
                                 <div class="action-links">
                                     <a href="{{ route('work-orders.show', $wo) }}" class="action-link action-link-detail">Detail</a>
                                 </div>
@@ -136,13 +200,19 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9">
+                            <td colspan="10">
                                 <div class="empty-state">
                                     <div class="empty-state-icon">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                     </div>
                                     <div class="empty-state-title">Belum ada Work Order</div>
-                                    <div class="empty-state-text">Buat Work Order pertama untuk memulai</div>
+                                    <div class="empty-state-text">
+                                        @if($search || $status)
+                                            Ubah filter untuk melihat data lain
+                                        @else
+                                            Buat Work Order pertama untuk memulai
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -151,7 +221,7 @@
             </table>
         </div>
         <div class="card-footer" style="display:flex; justify-content:center; padding:1rem;">
-            {{ $workOrders->links() }}
+            {{ $workOrders->withQueryString()->links() }}
         </div>
     </div>
 </x-app-layout>
