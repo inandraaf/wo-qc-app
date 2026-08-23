@@ -14,7 +14,7 @@ class StoreWorkOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'wo_number' => 'required|string|max:50|unique:work_orders,wo_number',
+            'wo_number' => 'nullable|string|max:50|unique:work_orders,wo_number',
             'date' => 'required|date',
             'product' => 'required|string|max:100',
             'qty_order' => 'required|integer|min:0',

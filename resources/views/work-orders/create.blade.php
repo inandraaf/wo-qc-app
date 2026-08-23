@@ -38,12 +38,12 @@
 
                     <div class="form-group">
                         <label class="form-label" for="wo_number">
-                            WO Number <span>*</span>
+                            WO Number <span style="font-size:0.65rem; font-weight:400; color:#94a3b8; text-transform:uppercase; letter-spacing:0.03em;">(auto)</span>
                         </label>
                         <input type="text" name="wo_number" id="wo_number"
-                               value="{{ old('wo_number') }}"
-                               class="form-control {{ $errors->has('wo_number') ? 'is-invalid' : '' }}"
-                               placeholder="Contoh: WO-2024-001" required>
+                               value="{{ old('wo_number', $suggestedWoNumber) }}"
+                               class="form-control @error('wo_number') is-invalid @enderror"
+                               style="background:#f8fafc;" readonly>
                         @error('wo_number')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
@@ -51,11 +51,11 @@
 
                     <div class="form-group">
                         <label class="form-label" for="date">
-                            Tanggal <span>*</span>
+                            Tanggal <span style="color:#ef4444;">*</span>
                         </label>
                         <input type="date" name="date" id="date"
                                value="{{ old('date', now()->toDateString()) }}"
-                               class="form-control {{ $errors->has('date') ? 'is-invalid' : '' }}" required>
+                               class="form-control @error('date') is-invalid @enderror" required>
                         @error('date')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
@@ -63,11 +63,11 @@
 
                     <div class="form-group">
                         <label class="form-label" for="product">
-                            Product <span>*</span>
+                            Product <span style="color:#ef4444;">*</span>
                         </label>
                         <input type="text" name="product" id="product"
                                value="{{ old('product') }}"
-                               class="form-control {{ $errors->has('product') ? 'is-invalid' : '' }}"
+                               class="form-control @error('product') is-invalid @enderror"
                                placeholder="Nama produk yang diproduksi" required>
                         @error('product')
                             <div class="form-error">{{ $message }}</div>
@@ -76,12 +76,12 @@
 
                     <div class="form-group">
                         <label class="form-label" for="qty_order">
-                            Qty Order <span>*</span>
+                            Qty Order <span style="color:#ef4444;">*</span>
                         </label>
                         <input type="number" name="qty_order" id="qty_order"
                                value="{{ old('qty_order') }}"
                                min="0" step="1"
-                               class="form-control {{ $errors->has('qty_order') ? 'is-invalid' : '' }}"
+                               class="form-control @error('qty_order') is-invalid @enderror"
                                placeholder="Jumlah target produksi" required>
                         @error('qty_order')
                             <div class="form-error">{{ $message }}</div>
@@ -91,7 +91,7 @@
                     <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
                         <a href="{{ route('work-orders.index') }}" class="btn btn-secondary">Batal</a>
                         <button type="submit" class="btn btn-primary">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
                             Simpan Work Order
                         </button>
                     </div>

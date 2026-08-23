@@ -41,7 +41,7 @@
                         Dashboard
                     </a>
 
-                    @can('create', App\Models\WorkOrder::class)
+                    @if(in_array(auth()->user()->role, ['ppic', 'operator', 'manager']))
                     <a href="{{ route('work-orders.index') }}"
                        class="sidebar-item {{ request()->routeIs('work-orders.*') ? 'active' : '' }}">
                         <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -52,8 +52,9 @@
                         </svg>
                         Work Orders
                     </a>
-                    @endcan
+                    @endif
 
+                    @if(in_array(auth()->user()->role, ['ppic', 'operator', 'manager']))
                     <a href="{{ route('productions.index') }}"
                        class="sidebar-item {{ request()->routeIs('productions.*') ? 'active' : '' }}">
                         <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -63,7 +64,9 @@
                         </svg>
                         Productions
                     </a>
+                    @endif
 
+                    @if(in_array(auth()->user()->role, ['ppic', 'qc', 'manager']))
                     <a href="{{ route('quality-controls.index') }}"
                        class="sidebar-item {{ request()->routeIs('quality-controls.*') ? 'active' : '' }}">
                         <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -72,6 +75,7 @@
                         </svg>
                         Quality Control
                     </a>
+                    @endif
                 </nav>
 
                 <div class="sidebar-footer">

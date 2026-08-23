@@ -16,9 +16,9 @@
         </div>
     @endif
 
-    <div style="display:grid; grid-template-columns: 380px 1fr; gap:1.5rem; align-items:start;">
+    <div style="display:grid; grid-template-columns: 400px 1fr; gap:1.5rem; align-items:start;">
         <!-- Form -->
-        <div class="card">
+        <div class="card" x-data="{ selectedWo: '', sisaQc: 0, totalProd: 0 }">
             <div class="card-header">
                 <span class="card-title">Catat QC Baru</span>
             </div>
@@ -38,8 +38,17 @@
                     @csrf
 
                     <div class="form-group">
-                        <label class="form-label" for="work_order_id">Work Order <span>*</span></label>
-                        <select name="work_order_id" id="work_order_id" class="form-control" required>
+                        <label class="form-label" for="work_order_id">Work Order <span style="color:#ef4444;">*</span></label>
+                        <select name="work_order_id" id="work_order_id"
+                                class="form-control @error('work_order_id') is-invalid @enderror"
+                                required
+                                x-model="selectedWo"
+                                @change="
+                                    selectedWo = $event.target.value;
+                                    const opt = $event.target.selectedOptions[0];
+                                    sisaQc = opt ? parseInt(opt.dataset.sisaQc) : 0;
+                                    totalProd = opt ? parseInt(opt.dataset.totalProd) : 0;
+                                ">
                             <option value="">-- Pilih WO --</option>
                             @foreach($workOrders as $wo)
                                 @php
@@ -48,8 +57,11 @@
                                     $sisaQc = $totalProd - $totalQc;
                                 @endphp
                                 @if($sisaQc > 0)
-                                    <option value="{{ $wo->id }}" {{ old('work_order_id') == $wo->id ? 'selected' : '' }}>
-                                        {{ $wo->wo_number }} — {{ $wo->product }} (Sisa QC: {{ number_format($sisaQc) }})
+                                    <option value="{{ $wo->id }}"
+                                            data-sisa-qc="{{ $sisaQc }}"
+                                            data-total-prod="{{ $totalProd }}"
+                                            {{ old('work_order_id') == $wo->id ? 'selected' : '' }}>
+                                        {{ $wo->wo_number }} — {{ $wo->product }}
                                     </option>
                                 @endif
                             @endforeach
@@ -59,17 +71,45 @@
                         @enderror
                     </div>
 
+                    <!-- Sisa QC Info Helper -->
+                    <div x-show="selectedWo !== ''"
+                         x-transition
+                         style="
+                            background: #f0fdf4;
+                            border: 1px solid #bbf7d0;
+                            border-radius: 0.5rem;
+                            padding: 0.75rem 1rem;
+                            margin-bottom: 1rem;
+                         ">
+                        <div style="font-size:0.7rem; font-weight:600; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Info WO</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; font-size:0.8rem;">
+                            <div>
+                                <span style="color:#64748b;">Total Produksi</span>
+                                <div style="font-weight:700; color:#0f172a;" x-text="totalProd.toLocaleString()"></div>
+                            </div>
+                            <div>
+                                <span style="color:#64748b;">Sisa QC</span>
+                                <div style="font-weight:700; color:#f59e0b;" x-text="sisaQc.toLocaleString()"></div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.7rem; color:#16a34a; margin-top:0.375rem;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Total Good + Not Good tidak boleh melebihi <strong x-text="sisaQc.toLocaleString()"></strong>
+                        </div>
+                    </div>
+
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                         <div class="form-group">
                             <label class="form-label" for="qty_good">
                                 <span style="display:inline-flex; align-items:center; gap:0.25rem;">
                                     <span style="width:8px; height:8px; border-radius:50%; background:#22c55e; display:inline-block;"></span>
-                                    Good <span>*</span>
+                                    Good <span style="color:#ef4444;">*</span>
                                 </span>
                             </label>
                             <input type="number" name="qty_good" id="qty_good"
                                    value="{{ old('qty_good', 0) }}"
-                                   min="0" step="1" class="form-control" required>
+                                   min="0" step="1"
+                                   class="form-control @error('qty_good') is-invalid @enderror" required>
                             @error('qty_good')
                                 <div class="form-error">{{ $message }}</div>
                             @enderror
@@ -79,12 +119,13 @@
                             <label class="form-label" for="qty_not_good">
                                 <span style="display:inline-flex; align-items:center; gap:0.25rem;">
                                     <span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block;"></span>
-                                    Not Good <span>*</span>
+                                    Not Good <span style="color:#ef4444;">*</span>
                                 </span>
                             </label>
                             <input type="number" name="qty_not_good" id="qty_not_good"
                                    value="{{ old('qty_not_good', 0) }}"
-                                   min="0" step="1" class="form-control" required>
+                                   min="0" step="1"
+                                   class="form-control @error('qty_not_good') is-invalid @enderror" required>
                             @error('qty_not_good')
                                 <div class="form-error">{{ $message }}</div>
                             @enderror
@@ -92,10 +133,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="qc_date">Tanggal QC <span>*</span></label>
+                        <label class="form-label" for="qc_date">
+                            Tanggal QC <span style="color:#ef4444;">*</span>
+                        </label>
                         <input type="date" name="qc_date" id="qc_date"
                                value="{{ old('qc_date', now()->toDateString()) }}"
-                               class="form-control" required>
+                               class="form-control @error('qc_date') is-invalid @enderror" required>
                         @error('qc_date')
                             <div class="form-error">{{ $message }}</div>
                         @enderror

@@ -66,12 +66,14 @@ Status di-determine di Blade secara otomatis berdasarkan `sisaProduksi` dan `sis
 
 ## Role & Akses
 
-| Role | Buat WO | Edit WO | Input Produksi | Input QC | Dashboard |
-|------|:-------:|:-------:|:--------------:|:--------:|:---------:|
-| PPIC | ✅ | ✅ | | | |
-| Operator | | | ✅ | | |
-| QC | | | | ✅ | |
-| Manager | | | | | ✅ |
+| Role | Buat WO | Lihat WO | Input Produksi | Input QC | Dashboard |
+|------|:-------:|:--------:|:--------------:|:--------:|:---------:|
+| PPIC | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Operator | | ✅ | ✅ | | ✅ |
+| QC | | | | ✅ | ✅ |
+| Manager | | | ✅ | ✅ | ✅ |
+
+Sidebar navigation otomatis menyesuaikan menu berdasarkan role login.
 
 ## Instalasi
 

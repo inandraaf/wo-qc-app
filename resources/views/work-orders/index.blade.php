@@ -44,10 +44,19 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>WO Number</th>
-                        <th>Product</th>
-                        <th>Tanggal</th>
-                        <th class="text-right">Qty Order</th>
+                        @php
+                            function woSortLink($col, $label, $sortBy, $sortDir) {
+                                $newDir = ($sortBy === $col && $sortDir === 'asc') ? 'desc' : 'asc';
+                                $isActive = $sortBy === $col;
+                                $arrow = $isActive ? ($sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+                                $url = route('work-orders.index', array_filter(['search' => request('search'), 'sort_by' => $col, 'sort_dir' => $newDir]));
+                                return '<a href="' . e($url) . '" style="color:' . ($isActive ? '#2563eb' : '#64748b') . '; text-decoration:none; white-space:nowrap;">' . e($label) . $arrow . '</a>';
+                            }
+                        @endphp
+                        <th>{!! woSortLink('wo_number', 'WO Number', $sortBy ?? '', $sortDir ?? '') !!}</th>
+                        <th>{!! woSortLink('product', 'Product', $sortBy ?? '', $sortDir ?? '') !!}</th>
+                        <th>{!! woSortLink('date', 'Tanggal', $sortBy ?? '', $sortDir ?? '') !!}</th>
+                        <th class="text-right">{!! woSortLink('qty_order', 'Qty Order', $sortBy ?? '', $sortDir ?? '') !!}</th>
                         <th class="text-right">Produksi</th>
                         <th style="width:120px;">Sisa Prod.</th>
                         <th class="text-right">QC</th>
@@ -142,10 +151,16 @@
                 </tbody>
             </table>
         </div>
-        @if($workOrders->hasPages())
-            <div class="card-footer" style="display:flex; justify-content:center; padding:1rem;">
+            <div class="card-footer" style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1.25rem;">
+                <span style="font-size:0.75rem; color:#94a3b8;">
+                    Menampilkan
+                    <strong style="color:#334155;">{{ $workOrders->firstItem() ?? 0 }}</strong>
+                    —
+                    <strong style="color:#334155;">{{ $workOrders->lastItem() ?? 0 }}</strong>
+                    dari
+                    <strong style="color:#334155;">{{ $workOrders->total() }}</strong>
+                </span>
                 {{ $workOrders->withQueryString()->links() }}
             </div>
-        @endif
     </div>
 </x-app-layout>

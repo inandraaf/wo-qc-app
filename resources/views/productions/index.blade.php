@@ -16,9 +16,9 @@
         </div>
     @endif
 
-    <div style="display:grid; grid-template-columns: 380px 1fr; gap:1.5rem; align-items:start;">
+    <div style="display:grid; grid-template-columns: 400px 1fr; gap:1.5rem; align-items:start;">
         <!-- Form -->
-        <div class="card">
+        <div class="card" x-data="{ selectedWo: '', sisa: 0, qtyOrder: 0, totalProd: 0 }">
             <div class="card-header">
                 <span class="card-title">Catat Produksi Baru</span>
             </div>
@@ -38,16 +38,30 @@
                     @csrf
 
                     <div class="form-group">
-                        <label class="form-label" for="work_order_id">Work Order <span>*</span></label>
-                        <select name="work_order_id" id="work_order_id" class="form-control" required>
+                        <label class="form-label" for="work_order_id">Work Order <span style="color:#ef4444;">*</span></label>
+                        <select name="work_order_id" id="work_order_id"
+                                class="form-control @error('work_order_id') is-invalid @enderror"
+                                required
+                                x-model="selectedWo"
+                                @change="
+                                    selectedWo = $event.target.value;
+                                    const opt = $event.target.selectedOptions[0];
+                                    sisa = opt ? parseInt(opt.dataset.sisa) : 0;
+                                    qtyOrder = opt ? parseInt(opt.dataset.qtyOrder) : 0;
+                                    totalProd = opt ? parseInt(opt.dataset.totalProd) : 0;
+                                ">
                             <option value="">-- Pilih WO --</option>
                             @foreach($workOrders as $wo)
                                 @php
                                     $sisa = $wo->qty_order - ($wo->productions_sum_qty_production ?? 0);
                                 @endphp
                                 @if($sisa > 0)
-                                    <option value="{{ $wo->id }}" {{ old('work_order_id') == $wo->id ? 'selected' : '' }}>
-                                        {{ $wo->wo_number }} — {{ $wo->product }} (Sisa: {{ number_format($sisa) }})
+                                    <option value="{{ $wo->id }}"
+                                            data-sisa="{{ $sisa }}"
+                                            data-qty-order="{{ $wo->qty_order }}"
+                                            data-total-prod="{{ $wo->productions_sum_qty_production ?? 0 }}"
+                                            {{ old('work_order_id') == $wo->id ? 'selected' : '' }}>
+                                        {{ $wo->wo_number }} — {{ $wo->product }}
                                     </option>
                                 @endif
                             @endforeach
@@ -57,28 +71,66 @@
                         @enderror
                     </div>
 
+                    <!-- Sisa Info Helper -->
+                    <div x-show="selectedWo !== ''"
+                         x-transition
+                         style="
+                            background: #f0f9ff;
+                            border: 1px solid #bae6fd;
+                            border-radius: 0.5rem;
+                            padding: 0.75rem 1rem;
+                            margin-bottom: 1rem;
+                         ">
+                        <div style="font-size:0.7rem; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Info WO</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; font-size:0.8rem;">
+                            <div>
+                                <span style="color:#64748b;">Qty Order</span>
+                                <div style="font-weight:700; color:#0f172a;" x-text="qtyOrder.toLocaleString()"></div>
+                            </div>
+                            <div>
+                                <span style="color:#64748b;">Total Prod.</span>
+                                <div style="font-weight:700; color:#2563eb;" x-text="totalProd.toLocaleString()"></div>
+                            </div>
+                        </div>
+                        <div style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid #e0f2fe;">
+                            <span style="color:#64748b; font-size:0.75rem;">Sisa boleh diproduksi</span>
+                            <div style="font-size:1.1rem; font-weight:800; color:#f59e0b;" x-text="sisa.toLocaleString()"></div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label class="form-label" for="qty_production">Qty Produksi <span>*</span></label>
+                        <label class="form-label" for="qty_production">
+                            Qty Produksi <span style="color:#ef4444;">*</span>
+                        </label>
                         <input type="number" name="qty_production" id="qty_production"
                                value="{{ old('qty_production') }}"
-                               min="1" step="1" class="form-control" required>
+                               min="1" step="1"
+                               class="form-control @error('qty_production') is-invalid @enderror"
+                               :max="sisa > 0 ? sisa : null"
+                               :placeholder="Max: ' + (sisa > 0 ? sisa : '-') + ' unit"
+                               required>
+                        <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.25rem;">
+                            Maksimum: <strong x-text="sisa > 0 ? sisa.toLocaleString() : '-'"></strong> unit
+                        </div>
                         @error('qty_production')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="production_date">Tanggal Produksi <span>*</span></label>
+                        <label class="form-label" for="production_date">
+                            Tanggal Produksi <span style="color:#ef4444;">*</span>
+                        </label>
                         <input type="date" name="production_date" id="production_date"
                                value="{{ old('production_date', now()->toDateString()) }}"
-                               class="form-control" required>
+                               class="form-control @error('production_date') is-invalid @enderror" required>
                         @error('production_date')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>
                         Simpan Produksi
                     </button>
                 </form>
