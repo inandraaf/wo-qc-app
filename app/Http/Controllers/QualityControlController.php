@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreQualityControlRequest;
 use App\Models\QualityControl;
 use App\Models\WorkOrder;
+use App\Services\WorkOrderStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -21,7 +22,7 @@ class QualityControlController extends Controller
                                ->orderBy('created_at', 'desc')
                                ->get();
 
-        $qualityControls = QualityControl::with('workOrder')
+        $qualityControls = QualityControl::with(['workOrder', 'qcBy'])
                                          ->when($workOrderId, fn($q) => $q->where('work_order_id', $workOrderId))
                                          ->orderBy('created_at', 'desc')
                                          ->paginate(20)
@@ -56,7 +57,13 @@ class QualityControlController extends Controller
                              ->withInput();
         }
 
+        // Auto-fill qc_by from authenticated user
+        $data['qc_by'] = auth()->id();
+
         QualityControl::create($data);
+
+        // Auto-update WO status
+        WorkOrderStatusService::afterQc($workOrder);
 
         return redirect()->back()
                          ->with('success', 'Data QC berhasil dicatat.');

@@ -8,6 +8,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="{{ asset('js/chart.umd.min.js') }}"></script>
     </head>
     <body>
         <div class="sidebar-layout">
@@ -41,9 +42,9 @@
                         Dashboard
                     </a>
 
-                    @if(in_array(auth()->user()->role, ['ppic', 'operator', 'manager']))
+                    @if(in_array(auth()->user()->role, ['ppic', 'super_admin']))
                     <a href="{{ route('work-orders.index') }}"
-                       class="sidebar-item {{ request()->routeIs('work-orders.*') ? 'active' : '' }}">
+                       class="sidebar-item {{ request()->routeIs('work-orders.index', 'work-orders.create', 'work-orders.show', 'work-orders.edit', 'work-orders.update') ? 'active' : '' }}">
                         <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
@@ -54,9 +55,9 @@
                     </a>
                     @endif
 
-                    @if(in_array(auth()->user()->role, ['ppic', 'operator', 'manager']))
+                    @if(in_array(auth()->user()->role, ['operator', 'super_admin']))
                     <a href="{{ route('productions.index') }}"
-                       class="sidebar-item {{ request()->routeIs('productions.*') ? 'active' : '' }}">
+                       class="sidebar-item {{ request()->routeIs('productions.index', 'productions.store') ? 'active' : '' }}">
                         <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                             <path d="M2 17l10 5 10-5"/>
@@ -66,14 +67,27 @@
                     </a>
                     @endif
 
-                    @if(in_array(auth()->user()->role, ['ppic', 'qc', 'manager']))
+                    @if(in_array(auth()->user()->role, ['qc', 'super_admin']))
                     <a href="{{ route('quality-controls.index') }}"
-                       class="sidebar-item {{ request()->routeIs('quality-controls.*') ? 'active' : '' }}">
+                       class="sidebar-item {{ request()->routeIs('quality-controls.index', 'quality-controls.store') ? 'active' : '' }}">
                         <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
                         Quality Control
+                    </a>
+                    @endif
+
+                    @if(in_array(auth()->user()->role, ['super_admin']))
+                    <a href="{{ route('users.index') }}"
+                       class="sidebar-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                        <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                        User Management
                     </a>
                     @endif
                 </nav>
@@ -85,7 +99,16 @@
                         </div>
                         <div class="sidebar-user-info">
                             <div class="sidebar-user-name">{{ Auth::user()->name }}</div>
-                            <div class="sidebar-user-role">{{ Auth::user()->role }}</div>
+                            <div class="sidebar-user-role" style="text-transform:uppercase; font-size:0.65rem;">
+                                @switch(auth()->user()->role)
+                                    @case('super_admin') Super Admin @break
+                                    @case('ppic') PPIC @break
+                                    @case('operator') Operator @break
+                                    @case('qc') QC @break
+                                    @case('manager') Manager @break
+                                    @default {{ auth()->user()->role }}
+                                @endswitch
+                            </div>
                         </div>
                     </div>
                     <div style="margin-top: 0.25rem; display:flex; flex-direction:column; gap: 2px;">
@@ -138,4 +161,5 @@
             </div>
         </div>
     </body>
+    @stack('scripts')
 </html>

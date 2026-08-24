@@ -14,6 +14,7 @@ return new class extends Migration
             $table->date('date');
             $table->string('product', 100);
             $table->integer('qty_order')->default(0);
+            $table->enum('status', ['in_progress', 'prod_complete', 'fully_qc'])->default('in_progress');
             $table->timestamps();
         });
     }

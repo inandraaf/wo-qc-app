@@ -9,6 +9,7 @@ class Production extends Model
 {
     protected $fillable = [
         'work_order_id',
+        'operator_id',
         'qty_production',
         'production_date',
     ];
@@ -24,5 +25,10 @@ class Production extends Model
     public function workOrder(): BelongsTo
     {
         return $this->belongsTo(WorkOrder::class);
+    }
+
+    public function operator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'operator_id');
     }
 }

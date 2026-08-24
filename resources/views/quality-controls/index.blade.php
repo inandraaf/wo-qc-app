@@ -16,9 +16,23 @@
         </div>
     @endif
 
+    @php
+        $oldWorkOrderId = old('work_order_id');
+        $oldSisaQc = 0;
+        $oldTotalProd = 0;
+        if ($oldWorkOrderId) {
+            $oldWo = $workOrders->firstWhere('id', $oldWorkOrderId);
+            if ($oldWo) {
+                $oldTotalProd = $oldWo->productions_sum_qty_production ?? 0;
+                $totalQc = ($oldWo->qc_total_good ?? 0) + ($oldWo->qc_total_not_good ?? 0);
+                $oldSisaQc = $oldTotalProd - $totalQc;
+            }
+        }
+    @endphp
+
     <div style="display:grid; grid-template-columns: 400px 1fr; gap:1.5rem; align-items:start;">
         <!-- Form -->
-        <div class="card" x-data="{ selectedWo: '', sisaQc: 0, totalProd: 0 }">
+        <div class="card" x-data="{ selectedWo: '{{ $oldWorkOrderId ?? '' }}', sisaQc: {{ $oldSisaQc }}, totalProd: {{ $oldTotalProd }} }">
             <div class="card-header">
                 <span class="card-title">Catat QC Baru</span>
             </div>
@@ -172,6 +186,7 @@
                             <th>Tanggal</th>
                             <th class="text-right">Good</th>
                             <th class="text-right">Reject</th>
+                            <th>QC By</th>
                             <th class="text-right">Dicatat</th>
                         </tr>
                     </thead>
@@ -187,11 +202,18 @@
                                 <td class="text-right">
                                     <span class="num" style="color:#dc2626; font-weight:700;">+{{ number_format($qc->qty_not_good) }}</span>
                                 </td>
+                                <td>
+                                    @if($qc->qcBy)
+                                        <span style="font-size:0.75rem; color:#64748b;">{{ $qc->qcBy->name }}</span>
+                                    @else
+                                        <span style="font-size:0.75rem; color:#94a3b8;">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-right" style="color:#94a3b8; font-size:0.75rem;">{{ $qc->created_at->format('d/m H:i') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="7">
                                     <div class="empty-state">
                                         <div class="empty-state-icon">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>

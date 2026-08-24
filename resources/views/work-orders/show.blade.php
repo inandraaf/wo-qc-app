@@ -134,6 +134,7 @@
                         <tr>
                             <th>Tanggal</th>
                             <th class="text-right">Qty</th>
+                            <th>Operator</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -143,9 +144,16 @@
                                 <td class="text-right">
                                     <span class="num" style="color:#2563eb; font-weight:700;">{{ number_format($prod->qty_production) }}</span>
                                 </td>
+                                <td>
+                                    @if($prod->operator)
+                                        <span style="font-size:0.75rem; color:#64748b;">{{ $prod->operator->name }}</span>
+                                    @else
+                                        <span style="font-size:0.75rem; color:#94a3b8;">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="2" style="text-align:center; color:#94a3b8; padding:1.5rem; font-size:0.8rem;">Belum ada data produksi</td></tr>
+                            <tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:1.5rem; font-size:0.8rem;">Belum ada data produksi</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -165,6 +173,7 @@
                             <th>Tanggal</th>
                             <th class="text-right">Good</th>
                             <th class="text-right">Reject</th>
+                            <th>QC By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -177,9 +186,16 @@
                                 <td class="text-right">
                                     <span class="num" style="color:#dc2626; font-weight:700;">{{ number_format($qc->qty_not_good) }}</span>
                                 </td>
+                                <td>
+                                    @if($qc->qcBy)
+                                        <span style="font-size:0.75rem; color:#64748b;">{{ $qc->qcBy->name }}</span>
+                                    @else
+                                        <span style="font-size:0.75rem; color:#94a3b8;">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:1.5rem; font-size:0.8rem;">Belum ada data QC</td></tr>
+                            <tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:1.5rem; font-size:0.8rem;">Belum ada data QC</td></tr>
                         @endforelse
                     </tbody>
                 </table>

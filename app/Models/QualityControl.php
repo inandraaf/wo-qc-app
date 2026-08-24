@@ -9,6 +9,7 @@ class QualityControl extends Model
 {
     protected $fillable = [
         'work_order_id',
+        'qc_by',
         'qty_good',
         'qty_not_good',
         'qc_date',
@@ -26,5 +27,10 @@ class QualityControl extends Model
     public function workOrder(): BelongsTo
     {
         return $this->belongsTo(WorkOrder::class);
+    }
+
+    public function qcBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'qc_by');
     }
 }

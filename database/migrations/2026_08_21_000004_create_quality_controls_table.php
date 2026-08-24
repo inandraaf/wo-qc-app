@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('work_order_id')
                   ->constrained('work_orders')
                   ->onDelete('cascade');
+            $table->foreignId('qc_by')
+                  ->nullable()
+                  ->constrained('users')
+                  ->onDelete('set null');
             $table->integer('qty_good')->default(0);
             $table->integer('qty_not_good')->default(0);
             $table->date('qc_date');

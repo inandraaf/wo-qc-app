@@ -16,9 +16,24 @@
         </div>
     @endif
 
+    @php
+        $oldWorkOrderId = old('work_order_id');
+        $oldSisa = 0;
+        $oldQtyOrder = 0;
+        $oldTotalProd = 0;
+        if ($oldWorkOrderId) {
+            $oldWo = $workOrders->firstWhere('id', $oldWorkOrderId);
+            if ($oldWo) {
+                $oldTotalProd = $oldWo->productions_sum_qty_production ?? 0;
+                $oldSisa = $oldWo->qty_order - $oldTotalProd;
+                $oldQtyOrder = $oldWo->qty_order;
+            }
+        }
+    @endphp
+
     <div style="display:grid; grid-template-columns: 400px 1fr; gap:1.5rem; align-items:start;">
         <!-- Form -->
-        <div class="card" x-data="{ selectedWo: '', sisa: 0, qtyOrder: 0, totalProd: 0 }">
+        <div class="card" x-data="{ selectedWo: '{{ $oldWorkOrderId ?? '' }}', sisa: {{ $oldSisa }}, qtyOrder: {{ $oldQtyOrder }}, totalProd: {{ $oldTotalProd }} }">
             <div class="card-header">
                 <span class="card-title">Catat Produksi Baru</span>
             </div>
@@ -60,7 +75,7 @@
                                             data-sisa="{{ $sisa }}"
                                             data-qty-order="{{ $wo->qty_order }}"
                                             data-total-prod="{{ $wo->productions_sum_qty_production ?? 0 }}"
-                                            {{ old('work_order_id') == $wo->id ? 'selected' : '' }}>
+                                            {{ $oldWorkOrderId == $wo->id ? 'selected' : '' }}>
                                         {{ $wo->wo_number }} — {{ $wo->product }}
                                     </option>
                                 @endif
@@ -75,13 +90,16 @@
                     <div x-show="selectedWo !== ''"
                          x-transition
                          style="
-                            background: #f0f9ff;
-                            border: 1px solid #bae6fd;
+                            background: #fef9c3;
+                            border: 1px solid #fbbf24;
                             border-radius: 0.5rem;
                             padding: 0.75rem 1rem;
                             margin-bottom: 1rem;
                          ">
-                        <div style="font-size:0.7rem; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Info WO</div>
+                        <div style="font-size:0.7rem; font-weight:600; color:#b45309; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:0.25rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Info WO
+                        </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; font-size:0.8rem;">
                             <div>
                                 <span style="color:#64748b;">Qty Order</span>
@@ -92,9 +110,13 @@
                                 <div style="font-weight:700; color:#2563eb;" x-text="totalProd.toLocaleString()"></div>
                             </div>
                         </div>
-                        <div style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid #e0f2fe;">
+                        <div style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid #fef08a;">
                             <span style="color:#64748b; font-size:0.75rem;">Sisa boleh diproduksi</span>
-                            <div style="font-size:1.1rem; font-weight:800; color:#f59e0b;" x-text="sisa.toLocaleString()"></div>
+                            <div style="font-size:1.1rem; font-weight:800; color:#d97706;" x-text="sisa.toLocaleString()"></div>
+                        </div>
+                        <div style="font-size:0.7rem; color:#b45309; margin-top:0.375rem;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:0.25rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Qty produksi tidak boleh melebihi <strong x-text="sisa.toLocaleString()"></strong> unit
                         </div>
                     </div>
 
@@ -106,12 +128,7 @@
                                value="{{ old('qty_production') }}"
                                min="1" step="1"
                                class="form-control @error('qty_production') is-invalid @enderror"
-                               :max="sisa > 0 ? sisa : null"
-                               :placeholder="Max: ' + (sisa > 0 ? sisa : '-') + ' unit"
                                required>
-                        <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.25rem;">
-                            Maksimum: <strong x-text="sisa > 0 ? sisa.toLocaleString() : '-'"></strong> unit
-                        </div>
                         @error('qty_production')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
@@ -156,6 +173,7 @@
                             <th>Product</th>
                             <th>Tanggal</th>
                             <th class="text-right">Qty</th>
+                            <th>Operator</th>
                             <th class="text-right">Dicatat</th>
                         </tr>
                     </thead>
@@ -168,11 +186,18 @@
                                 <td class="text-right">
                                     <span class="num" style="color:#2563eb; font-weight:700; font-size:0.9rem;">+{{ number_format($prod->qty_production) }}</span>
                                 </td>
+                                <td>
+                                    @if($prod->operator)
+                                        <span style="font-size:0.75rem; color:#64748b;">{{ $prod->operator->name }}</span>
+                                    @else
+                                        <span style="font-size:0.75rem; color:#94a3b8;">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-right" style="color:#94a3b8; font-size:0.75rem;">{{ $prod->created_at->format('d/m H:i') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5">
+                                <td colspan="6">
                                     <div class="empty-state">
                                         <div class="empty-state-icon">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>

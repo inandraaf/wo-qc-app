@@ -12,6 +12,12 @@ class UserRoleSeeder extends Seeder
     {
         $users = [
             [
+                'name' => 'Super Admin',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'super_admin',
+            ],
+            [
                 'name' => 'Admin PPIC',
                 'email' => 'ppic@example.com',
                 'password' => Hash::make('password'),

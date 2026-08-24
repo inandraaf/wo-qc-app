@@ -45,10 +45,12 @@ class WorkOrderController extends Controller
     {
         $data = $request->validated();
 
-        // Auto-generate wo_number if left empty
         if (empty($data['wo_number'])) {
             $data['wo_number'] = $this->generateWoNumber();
         }
+
+        // Set initial status
+        $data['status'] = 'in_progress';
 
         WorkOrder::create($data);
 
@@ -61,8 +63,8 @@ class WorkOrderController extends Controller
         $workOrder->loadSum('productions', 'qty_production');
         $workOrder->loadSum('qualityControls as qc_total_good', 'qty_good');
         $workOrder->loadSum('qualityControls as qc_total_not_good', 'qty_not_good');
-        $workOrder->load(['productions' => fn($q) => $q->orderBy('production_date', 'desc')]);
-        $workOrder->load(['qualityControls' => fn($q) => $q->orderBy('qc_date', 'desc')]);
+        $workOrder->load(['productions' => fn($q) => $q->with('operator')->orderBy('production_date', 'desc')]);
+        $workOrder->load(['qualityControls' => fn($q) => $q->with('qcBy')->orderBy('qc_date', 'desc')]);
 
         return view('work-orders.show', compact('workOrder'));
     }

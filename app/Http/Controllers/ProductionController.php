@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductionRequest;
 use App\Models\Production;
 use App\Models\WorkOrder;
+use App\Services\WorkOrderStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,7 +20,7 @@ class ProductionController extends Controller
                                ->orderBy('created_at', 'desc')
                                ->get();
 
-        $productions = Production::with('workOrder')
+        $productions = Production::with(['workOrder', 'operator'])
                                  ->when($workOrderId, fn($q) => $q->where('work_order_id', $workOrderId))
                                  ->orderBy('created_at', 'desc')
                                  ->paginate(20)
@@ -43,7 +44,13 @@ class ProductionController extends Controller
                              ->withInput();
         }
 
+        // Auto-fill operator_id from authenticated user
+        $data['operator_id'] = auth()->id();
+
         Production::create($data);
+
+        // Auto-update WO status
+        WorkOrderStatusService::afterProduction($workOrder);
 
         return redirect()->back()
                          ->with('success', 'Data produksi berhasil dicatat.');

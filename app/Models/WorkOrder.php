@@ -12,6 +12,7 @@ class WorkOrder extends Model
         'date',
         'product',
         'qty_order',
+        'status',
     ];
 
     protected function casts(): array
@@ -30,5 +31,26 @@ class WorkOrder extends Model
     public function qualityControls(): HasMany
     {
         return $this->hasMany(QualityControl::class);
+    }
+
+    // Status helpers
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            'in_progress' => 'In Progress',
+            'prod_complete' => 'Prod. Selesai',
+            'fully_qc' => "Fully QC'd",
+            default => 'Belum Produksi',
+        };
+    }
+
+    public function getStatusClassAttribute(): string
+    {
+        return match($this->status) {
+            'in_progress' => 'badge-warning',
+            'prod_complete' => 'badge-info',
+            'fully_qc' => 'badge-success',
+            default => 'badge-gray',
+        };
     }
 }
