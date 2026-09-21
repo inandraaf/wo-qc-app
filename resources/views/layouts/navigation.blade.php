@@ -17,6 +17,9 @@
                     </x-nav-link>
 
                     @auth
+                        <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                            {{ __('Products') }}
+                        </x-nav-link>
                         {{-- PPIC: Work Orders menu --}}
                         @if(in_array(auth()->user()->role, ['ppic', 'super_admin']))
                             <x-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">

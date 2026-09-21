@@ -6,6 +6,7 @@ use App\Http\Controllers\QualityControlController;
 use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -61,6 +62,10 @@ Route::middleware('auth')->group(function () {
     // Quality Controls
     Route::middleware('role:qc,super_admin')->group(function () {
         Route::resource('quality-controls', QualityControlController::class)->only(['index', 'store']);
+    });
+
+    Route::middleware(['auth'])->group(function () {
+        Route::resource('products', ProductController::class);
     });
 });
 
